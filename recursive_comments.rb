@@ -52,53 +52,56 @@ comments = [
 # >> </ul>
 
 class RecursiveCode
-  def tab(gutter, depth)
+  attr_reader :comments, :gutter, :depth
+
+  def initialize(comments, gutter=0, depth=0)
+    @comments, @gutter, @depth = comments, gutter, depth
+  end
+
+  def indent
     '  ' * (gutter + depth)
   end
 
-  def render_list(comments, gutter=0, depth=0)
-    indent = tab(gutter, depth)
+  def render_list
     puts indent + "<ul>"
-    render_items(comments, gutter, depth+1)
+    RecursiveCode.new(comments, gutter, depth+1).render_items
     puts indent + "</ul>"
   end
 
-  def next_item_is_out_of_my_depth?(comments, depth)
-    comments.empty? || comments.first.depth < depth
-  end
-
-  def render_only_child(item, gutter, depth)
-    indent = tab(gutter, depth)
+  def render_only_child(item)
     puts indent + "<li>#{item.nesting}</li>"
   end
 
-  def render_middle_child(item, comments, gutter, depth)
-    indent = tab(gutter, depth)
+  def render_middle_child(item)
     puts indent + "<li>#{item.nesting}"
-    render_list(comments, gutter+1, depth)
+    RecursiveCode.new(comments, gutter+1, depth).render_list
     puts indent + "</li>"
   end
 
-  def next_item_is_even_deeper?(comments, depth)
+  def next_item_is_out_of_my_depth?
+    comments.empty? || comments.first.depth < depth
+  end
+
+  def next_item_is_even_deeper?
     !comments.empty? && comments.first.depth > depth
   end
 
-  def render_items(comments, gutter, depth)
-    indent = tab(gutter, depth)
-    until next_item_is_out_of_my_depth?(comments, depth)
+  def render_items
+    until next_item_is_out_of_my_depth?
       item = comments.shift
-      if next_item_is_even_deeper?(comments, depth)
-        render_middle_child(item, comments, gutter, depth)
+      if next_item_is_even_deeper?
+        render_middle_child item
       else
-        render_only_child(item, gutter, depth)
+        render_only_child item
       end
     end
   end
 
-  def self.show_expected_results(comments)
-    new.render_list(comments)
+  def render
+    render_list
   end
 end
 
+recurser = RecursiveCode.new(comments).render
+#recurser.show_expected_results
 
-RecursiveCode.show_expected_results comments
