@@ -52,54 +52,53 @@ comments = [
 # >> </ul>
 
 class RecursiveCode
-  attr_reader :comments, :gutter, :depth
-
-  def initialize(comments)
-    @comments = comments
-    @gutter, @depth = 0, 0
-  end
-
-  def indent
+  def tab(gutter, depth)
     '  ' * (gutter + depth)
   end
 
-  def render_list
+  def render_list(comments, gutter=0, depth=0)
+    indent = tab(gutter, depth)
     puts indent + "<ul>"
-    @depth += 1
-    render_items
+    render_items(comments, gutter, depth+1)
     puts indent + "</ul>"
   end
 
-  def next_item_is_out_of_my_depth?
+  def next_item_is_out_of_my_depth?(comments, depth)
     comments.empty? || comments.first.depth < depth
   end
 
-  def render_only_child(item)
+  def render_only_child(item, gutter, depth)
+    indent = tab(gutter, depth)
     puts indent + "<li>#{item.nesting}</li>"
   end
 
-  def render_middle_child(item)
+  def render_middle_child(item, comments, gutter, depth)
+    indent = tab(gutter, depth)
     puts indent + "<li>#{item.nesting}"
-    @gutter += 1
-    render_list
+    render_list(comments, gutter+1, depth)
     puts indent + "</li>"
   end
 
-  def next_item_is_even_deeper?
+  def next_item_is_even_deeper?(comments, depth)
     !comments.empty? && comments.first.depth > depth
   end
 
   def render_items(comments, gutter, depth)
-    until next_item_is_out_of_my_depth?
+    indent = tab(gutter, depth)
+    until next_item_is_out_of_my_depth?(comments, depth)
       item = comments.shift
-      if next_item_is_even_deeper?
-        render_middle_child item
+      if next_item_is_even_deeper?(comments, depth)
+        render_middle_child(item, comments, gutter, depth)
       else
-        render_only_child item
+        render_only_child(item, gutter, depth)
       end
     end
   end
+
+  def self.show_expected_results(comments)
+    new.render_list(comments)
+  end
 end
 
-recurser = RecursiveCode.new comments
-recurser.show_expected_results
+
+RecursiveCode.show_expected_results comments
