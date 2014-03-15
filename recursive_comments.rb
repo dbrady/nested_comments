@@ -67,41 +67,43 @@ class RecursiveCode
     RecursiveCode.new(comments, gutter, depth+1).render_items
     puts indent + "</ul>"
   end
+  alias :render :render_list
 
-  def render_only_child(item)
+  def render_single_item(item)
     puts indent + "<li>#{item.nesting}</li>"
   end
-
-  def render_middle_child(item)
+  
+  def render_with_children(item)
     puts indent + "<li>#{item.nesting}"
     RecursiveCode.new(comments, gutter+1, depth).render_list
     puts indent + "</li>"
   end
 
-  def next_item_is_out_of_my_depth?
-    comments.empty? || comments.first.depth < depth
+  def render_item(item)
+    if children?
+      render_with_children item
+    else
+      render_single_item item
+    end
   end
 
-  def next_item_is_even_deeper?
+  def next_comment_is_above_me?
+    comments.first.depth < depth
+  end
+
+  def done_at_this_level?
+    comments.empty? || next_comment_is_above_me?
+  end
+
+  def children?
     !comments.empty? && comments.first.depth > depth
   end
 
   def render_items
-    until next_item_is_out_of_my_depth?
-      item = comments.shift
-      if next_item_is_even_deeper?
-        render_middle_child item
-      else
-        render_only_child item
-      end
-    end
-  end
-
-  def render
-    render_list
+    render_item(comments.shift) until done_at_this_level?
   end
 end
 
-recurser = RecursiveCode.new(comments).render
-#recurser.show_expected_results
+RecursiveCode.new(comments).render
+
 
